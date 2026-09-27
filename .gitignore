@@ -1,0 +1,11 @@
+# Build output: zips are built by tools/ and uploaded to Modrinth, never committed
+/dist/
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Local test worlds and client files
+/run/

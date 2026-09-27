@@ -1,0 +1,83 @@
+schema: spec-driven
+
+context: |
+  # packs Constitution
+
+  ## What this repo is
+
+  NorthByte's own Minecraft content: datapacks and resource packs made here, not forked from
+  anyone. Each pack lives in its own top-level directory and is published as its own Modrinth
+  project under the NorthByte organization. The servers consume a pack by pinning a Modrinth
+  version id; that pin lives in a separate private repo, and nothing here deploys anything.
+
+  First pack: `kentucky-fried-creeper/`, a fried-chicken parody (created 2026-09-27).
+
+  ## Core Principles
+
+  ### I. This Repo Is Public
+  Every surface is public: files, commit messages, branch names, tags, issues, PRs, and the
+  Modrinth pages built from them.
+  - Never write a hostname, cluster or load-balancer address, Kubernetes namespace, credential,
+    token, or player identity (name, UUID, IP) anywhere here.
+  - A leak removed from `HEAD` is still in pushed history and in any published zip.
+  - Never write a bare `@name` into a commit, PR, issue or release note.
+  - Parody, not imitation: no real brand's name, logo, mascot likeness or slogan in any
+    texture, item name or description.
+
+  ### II. One Zip, Two Packs
+  A pack is a single dual-use zip: `data/` makes it a datapack, `assets/` makes it a resource
+  pack, one `pack.mcmeta` covers both. The server installs the same file as a datapack and
+  merges it into the resource pack it pushes to players.
+  - The datapack must stay playable without the resource pack: every custom item has a
+    readable name, so a player who declined the pack sees a named vanilla texture, not
+    nonsense.
+
+  ### III. The Target Version Is Pinned and Read, Never Guessed
+  Target: Minecraft Java 26.2 (the network's version, 2026-09-27).
+  - `pack_format` numbers and component names are read from the 26.2 server jar or the
+    official changelog, and the source is named in the commit. Never from memory.
+  - A target-version bump is its own change.
+
+  ### IV. A Released Identifier Is Permanent
+  Item data is baked into each stack when it is crafted, and placed paintings reference their
+  variant by id.
+  - Never rename or delete a released namespaced id (item model, painting variant, recipe,
+    advancement). A painting whose variant disappears fails to load and is removed from the
+    world.
+  - A balance change (food values, effects) reaches only newly crafted items. Say so in the
+    release notes.
+  - Published Modrinth versions are immutable. A fix is a new version.
+
+  ### V. Every Texture Has Exactly One Source
+  Textures are drawn as code: a script under `<pack>/art/` renders a PNG into `assets/`.
+  - A texture is either script-rendered or hand-edited, never both. A hand-edited PNG
+    deletes its script in the same commit, so a re-render cannot silently erase the edit.
+  - Rendered PNGs are committed, so the zip builds without Python.
+
+  ### VI. Player Text
+  Item names, lore and painting titles are player-facing.
+  - Swedish text keeps its diacritics (å, ä, ö). Never ASCII-strip them.
+  - No em dashes in player-facing text.
+
+  ## When to Use OpenSpec
+
+  Use a change for: a new pack, a new item or block, anything that alters a released item's
+  behaviour, a target-version bump, the build and publish tooling.
+  No change needed for: texture tweaks before a first release, typo fixes, README edits.
+
+  ## Conventions
+
+  - Conventional Commits, scoped by pack (`feat(kentucky-fried-creeper): ...`) or `(tools)`.
+  - Release tags are `<pack>/v<semver>`, one Modrinth version per tag.
+  - Commit attribution is `Co-Authored-By: Claude <noreply@anthropic.com>` or nothing.
+
+rules:
+  proposal:
+    - Name the pack(s) the change touches and whether any released identifier changes.
+  specs:
+    - One capability per pack or per shared tool; requirements describe in-game behaviour a
+      player can observe (what an item does, how it is obtained), not file layout.
+  design:
+    - Cite the source for every pack_format number and component name used.
+  tasks:
+    - End with an in-game check on a local 26.2 client, stating what was seen.
