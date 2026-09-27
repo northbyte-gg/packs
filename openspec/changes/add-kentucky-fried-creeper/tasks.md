@@ -24,9 +24,9 @@
 ## 4. Pack content
 
 - [x] 4.1 Data: four recipes, four recipe-unlock advancements, the `fried_creeper:sign` painting variant (not tagged `placeable`), and five give loot tables, all per D1 and D3. Verify: `task lint` passes, and each recipe's ingredients and counts match the spec.
-- [ ] 4.2 Assets: four item definitions (the empty bucket selects on display context, D6), their models, and `en_us.json` plus `sv_se.json` in `assets/fried_creeper/lang/`. Verify: `task lint` passes its translation checks, and every string matches the spec's names table exactly.
+- [x] 4.2 Assets: four item definitions (the empty bucket selects on display context, D6), their models, and `en_us.json` plus `sv_se.json` in `assets/fried_creeper/lang/`. Verify: `task lint` passes its translation checks, and every string matches the spec's names table exactly.
 - [ ] 4.3 Art scripts: drumstick, Bucket of Creeper, Empty Creeper Bucket (sprite plus 3D model texture), Hot Wings, the 64x32 sign, and a 64x64 `pack.png`. Verify: the owner reviews the previews in `dist/preview/` and approves each one.
-- [ ] 4.4 Pack README: install steps, "26.2 only", the recipes. Verify: every recipe and value in it matches the spec.
+- [x] 4.4 Pack README: install steps, "26.2 only", the recipes. Verify: every recipe and value in it matches the spec.
 
 ## 5. Verification before release
 
