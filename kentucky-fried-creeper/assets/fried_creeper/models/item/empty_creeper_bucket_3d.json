@@ -1,0 +1,205 @@
+{
+  "textures": {
+    "bucket": "fried_creeper:item/empty_creeper_bucket_3d",
+    "particle": "#bucket"
+  },
+  "elements": [
+    {
+      "from": [
+        -0.5,
+        6,
+        -0.5
+      ],
+      "to": [
+        16.5,
+        16,
+        16.5
+      ],
+      "faces": {
+        "east": {
+          "uv": [
+            8,
+            0,
+            16,
+            5
+          ],
+          "texture": "#bucket"
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            16,
+            5
+          ],
+          "texture": "#bucket"
+        },
+        "west": {
+          "uv": [
+            8,
+            0,
+            16,
+            5
+          ],
+          "texture": "#bucket"
+        },
+        "north": {
+          "uv": [
+            0,
+            0,
+            8,
+            5
+          ],
+          "texture": "#bucket"
+        },
+        "up": {
+          "uv": [
+            8,
+            6,
+            14,
+            12
+          ],
+          "texture": "#bucket"
+        },
+        "down": {
+          "uv": [
+            0,
+            8,
+            8,
+            16
+          ],
+          "texture": "#bucket"
+        }
+      }
+    },
+    {
+      "from": [
+        2,
+        16,
+        2
+      ],
+      "to": [
+        14,
+        19,
+        14
+      ],
+      "faces": {
+        "east": {
+          "uv": [
+            0,
+            5,
+            6,
+            6.5
+          ],
+          "texture": "#bucket"
+        },
+        "south": {
+          "uv": [
+            0,
+            5,
+            6,
+            6.5
+          ],
+          "texture": "#bucket"
+        },
+        "west": {
+          "uv": [
+            0,
+            5,
+            6,
+            6.5
+          ],
+          "texture": "#bucket"
+        },
+        "north": {
+          "uv": [
+            0,
+            5,
+            6,
+            6.5
+          ],
+          "texture": "#bucket"
+        },
+        "up": {
+          "uv": [
+            8,
+            6,
+            14,
+            12
+          ],
+          "texture": "#bucket"
+        }
+      }
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        2.5,
+        0
+      ],
+      "scale": [
+        0.375,
+        0.375,
+        0.375
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        2.5,
+        0
+      ],
+      "scale": [
+        0.375,
+        0.375,
+        0.375
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    }
+  }
+}
