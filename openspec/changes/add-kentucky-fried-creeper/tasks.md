@@ -25,13 +25,16 @@
 
 - [x] 4.1 Data: four recipes, four recipe-unlock advancements, the `fried_creeper:sign` painting variant (not tagged `placeable`), and five give loot tables, all per D1 and D3. Verify: `task lint` passes, and each recipe's ingredients and counts match the spec.
 - [x] 4.2 Assets: four item definitions (the empty bucket selects on display context, D6), their models, and `en_us.json` plus `sv_se.json` in `assets/fried_creeper/lang/`. Verify: `task lint` passes its translation checks, and every string matches the spec's names table exactly.
-- [ ] 4.3 Art scripts: drumstick, Bucket of Creeper, Empty Creeper Bucket (sprite plus 3D model texture), Hot Wings, the 64x32 sign, and a 64x64 `pack.png`. Verify: the owner reviews the previews in `dist/preview/` and approves each one.
+- [x] 4.3 Art scripts: drumstick, Bucket of Creeper, Empty Creeper Bucket (sprite plus 3D model texture), Hot Wings, the 64x32 sign, and a 64x64 `pack.png`. Verify: the owner reviews the previews in `dist/preview/` and approves each one.
+  - Approved 2026-09-27 (owner): all seven textures in game on a 26.2 client (inventory icons, bucket on the head in third person and in hand, sign hung) and in the previews.
 - [x] 4.4 Pack README: install steps, "26.2 only", the recipes. Verify: every recipe and value in it matches the spec.
 
 ## 5. Verification before release
 
-- [ ] 5.1 `task lint PACK=kentucky-fried-creeper`, then `task build … VERSION=1.0.0` twice. Verify: lint clean, and identical SHA-256s.
-- [ ] 5.2 Headless: boot the local 26.2 server with the built zip, `/loot spawn` each of the five give tables, and read each item entity's components. Verify: the log has no pack errors, and each item's components equal D3.
+- [x] 5.1 `task lint PACK=kentucky-fried-creeper`, then `task build … VERSION=1.0.0` twice. Verify: lint clean, and identical SHA-256s.
+  - 2026-09-27: lint clean; two builds of 1.0.0 both SHA-256 f063d2f82b066d23c80329f6cf474f9994c03f596abb4d515ef629e48fff2c7a; zip holds only pack.mcmeta, pack.png, data/, assets/.
+- [x] 5.2 Headless: boot the local 26.2 server with the built zip, `/loot spawn` each of the five give tables, and read each item entity's components. Verify: the log has no pack errors, and each item's components equal D3.
+  - 2026-09-27: local 26.2 server restarted with that exact zip (same SHA-256): no pack errors since start, 4 pack recipes loaded; all five give tables spawned items whose components equal D3 (amplifier 0 and swappable true omitted as defaults). A `/reload` that adds the pack fails on the sign, because painting variants load only at startup; the pack README says to restart.
 - [ ] 5.3 Owner, on a 26.2 client, walks every scenario in `specs/kentucky-fried-creeper/spec.md` against the built zip: all four recipes, eating each food, wearing the bucket, hanging the sign, at least five ordinary 4x2 paintings, recipe-book unlock, a `sv_se` client, and a client without the resource pack. Verify: each scenario is marked seen or failed, with what was seen written under this task.
 
 ## 6. Release
