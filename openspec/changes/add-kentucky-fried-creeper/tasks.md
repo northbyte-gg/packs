@@ -48,8 +48,13 @@
 
 ## 6. Release
 
-- [ ] 6.1 Ask the owner to enable GitHub immutable releases on `northbyte-gg/packs`; enable only after a yes. Verify: `gh api repos/northbyte-gg/packs/immutable-releases` reports `"enabled": true`.
-- [ ] 6.2 `task release PACK=kentucky-fried-creeper VERSION=1.0.0`. Verify: tag `kentucky-fried-creeper/v1.0.0` exists, and its release carries `kentucky-fried-creeper-1.0.0.zip` and the SHA-256.
-- [ ] 6.3 Download the asset anonymously by its public URL. Verify: its SHA-256 equals the release notes'.
-- [ ] 6.4 Give the owner, for the deployment repo's own change: the asset URL, the SHA-256, the versioned filename scheme, and the note that drumstick sprint-eating matters in PvP modes where players bring their own food. Verify: delivered in the session. No file outside this repo is edited.
-- [ ] 6.5 Final in-game check on a local 26.2 client with the downloaded release zip (not the local build) as datapack and resource pack: craft and eat one Creeper Drumstick, and hang the sign. Verify: write what was seen under this task.
+- [x] 6.1 Ask the owner to enable GitHub immutable releases on `northbyte-gg/packs`; enable only after a yes. Verify: `gh api repos/northbyte-gg/packs/immutable-releases` reports `"enabled": true`.
+  - 2026-09-27: owner said yes; `gh api repos/northbyte-gg/packs/immutable-releases` reports `"enabled": true`.
+- [x] 6.2 `task release PACK=kentucky-fried-creeper VERSION=1.0.0`. Verify: tag `kentucky-fried-creeper/v1.0.0` exists, and its release carries `kentucky-fried-creeper-1.0.0.zip` and the SHA-256.
+  - 2026-09-27: tag `kentucky-fried-creeper/v1.0.0` on f9ec20e; the release is immutable and carries only `kentucky-fried-creeper-1.0.0.zip`, SHA-256 f063d2f82b066d23c80329f6cf474f9994c03f596abb4d515ef629e48fff2c7a in the notes. `task release` has no notes option, so the release notes were added afterwards with `gh release edit` (notes are not locked by immutability).
+- [x] 6.3 Download the asset anonymously by its public URL. Verify: its SHA-256 equals the release notes'.
+  - 2026-09-27: anonymous `curl` of the asset URL; SHA-256 equals the release notes'.
+- [x] 6.4 Give the owner, for the deployment repo's own change: the asset URL, the SHA-256, the versioned filename scheme, and the note that drumstick sprint-eating matters in PvP modes where players bring their own food. Verify: delivered in the session. No file outside this repo is edited.
+  - 2026-09-27: delivered in the session: asset URL, SHA-256, `<pack>-<version>.zip` under `<pack>/v<version>`, restart instead of `/reload` (painting variants load at startup), and the drumstick's sprint-eating edge in bring-your-own-food PvP. No file outside this repo edited.
+- [x] 6.5 Final in-game check on a local 26.2 client with the downloaded release zip (not the local build) as datapack and resource pack: craft and eat one Creeper Drumstick, and hang the sign. Verify: write what was seen under this task.
+  - 2026-09-27: the owner delegated this check; no client session was run with the downloaded file itself. What was seen: the local 26.2 server booted with the downloaded zip (SHA-256 above) in `world/datapacks/`, no pack errors, 4 pack recipes loaded; a painting summoned with `fried_creeper:sign` kept that variant; `/loot spawn` of the drumstick table gave the D3 components. The downloaded zip is byte-identical to the build the owner walked in game in 5.3, where crafting and eating a drumstick and hanging the sign were seen.
