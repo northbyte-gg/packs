@@ -1,0 +1,36 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:cooked_chicken",
+    "minecraft:wheat",
+    "minecraft:gunpowder"
+  ],
+  "result": {
+    "id": "minecraft:cooked_chicken",
+    "count": 1,
+    "components": {
+      "minecraft:item_model": "fried_creeper:creeper_drumstick",
+      "minecraft:item_name": {
+        "translate": "item.fried_creeper.creeper_drumstick",
+        "fallback": "Creeper Drumstick"
+      },
+      "minecraft:lore": [
+        {
+          "translate": "item.fried_creeper.creeper_drumstick.desc",
+          "fallback": "Secret recipe. Mostly gunpowder.",
+          "color": "gray",
+          "italic": false
+        }
+      ],
+      "minecraft:food": {
+        "nutrition": 8,
+        "saturation": 9.6
+      },
+      "minecraft:use_effects": {
+        "can_sprint": true,
+        "speed_multiplier": 1.0
+      }
+    }
+  }
+}

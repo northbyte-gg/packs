@@ -1,0 +1,10 @@
+{
+  "pack": {
+    "description": "Kentucky Fried Creeper: a fried-chicken parody",
+    "min_format": 88,
+    "max_format": [
+      107,
+      1
+    ]
+  }
+}

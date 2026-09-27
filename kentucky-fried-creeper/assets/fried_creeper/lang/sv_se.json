@@ -1,0 +1,12 @@
+{
+  "item.fried_creeper.creeper_drumstick": "Creeperklubba",
+  "item.fried_creeper.creeper_drumstick.desc": "Hemligt recept. Mest krut.",
+  "item.fried_creeper.bucket_of_creeper": "Creeperhink",
+  "item.fried_creeper.bucket_of_creeper.desc": "Varning: matkoma.",
+  "item.fried_creeper.empty_creeper_bucket": "Tom creeperhink",
+  "item.fried_creeper.empty_creeper_bucket.desc": "Bär den med stolthet.",
+  "item.fried_creeper.hot_wings": "Heta vingar",
+  "item.fried_creeper.hot_wings.desc": "Munnen brinner redan.",
+  "painting.fried_creeper.sign.title": "Kentucky Fried Creeper",
+  "painting.fried_creeper.sign.author": "NorthByte"
+}

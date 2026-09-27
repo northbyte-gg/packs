@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:painting",
+    "minecraft:red_dye",
+    "minecraft:white_dye",
+    "minecraft:cooked_chicken"
+  ],
+  "result": {
+    "id": "minecraft:painting",
+    "count": 1,
+    "components": {
+      "minecraft:painting/variant": "fried_creeper:sign"
+    }
+  }
+}

@@ -13,14 +13,14 @@
 
 ## 3. Tooling
 
-- [ ] 3.1 `tools/render` and `task render PACK=<p>`: run every `<p>/art/*.py`, write its PNG into `assets/`, write 16x nearest-neighbour previews to `dist/preview/`. Verify: rendering twice leaves `git status` clean, and previews exist outside the pack.
-- [ ] 3.2 `tools/lint` and `task lint PACK=<p>`: every check in `specs/pack-build/spec.md`. Verify: a fixtures directory holds one broken mini pack per check, each failing with its named problem, and a clean fixture passes with a single summary line.
-- [ ] 3.3 `tools/build` and `task build PACK=<p> VERSION=<v>`: the reproducible zip from D8, refusing when the lint fails. Verify: two builds of one commit have the same SHA-256, and `unzip -l` lists only `pack.mcmeta`, `pack.png`, `data/` and `assets/`.
-- [ ] 3.4 `tools/release` and `task release PACK=<p> VERSION=<v>`, with `DRY_RUN=true` printing the `gh` command instead of running it. Verify with dry runs: it refuses on a dirty tree, on an existing tag and on a failing lint, and a clean run prints the tag, asset name and SHA-256.
+- [x] 3.1 `tools/render` and `task render PACK=<p>`: run every `<p>/art/*.py`, write its PNG into `assets/`, write 16x nearest-neighbour previews to `dist/preview/`. Verify: rendering twice leaves `git status` clean, and previews exist outside the pack.
+- [x] 3.2 `tools/lint` and `task lint PACK=<p>`: every check in `specs/pack-build/spec.md`. Verify: a fixtures directory holds one broken mini pack per check, each failing with its named problem, and a clean fixture passes with a single summary line.
+- [x] 3.3 `tools/build` and `task build PACK=<p> VERSION=<v>`: the reproducible zip from D8, refusing when the lint fails. Verify: two builds of one commit have the same SHA-256, and `unzip -l` lists only `pack.mcmeta`, `pack.png`, `data/` and `assets/`.
+- [x] 3.4 `tools/release` and `task release PACK=<p> VERSION=<v>`, with `DRY_RUN=true` printing the `gh` command instead of running it. Verify with dry runs: it refuses on a dirty tree, on an existing tag and on a failing lint, and a clean run prints the tag, asset name and SHA-256.
 
 ## 4. Pack content
 
-- [ ] 4.1 Data: four recipes, four recipe-unlock advancements, the `fried_creeper:sign` painting variant (not tagged `placeable`), and five give loot tables, all per D1 and D3. Verify: `task lint` passes, and each recipe's ingredients and counts match the spec.
+- [x] 4.1 Data: four recipes, four recipe-unlock advancements, the `fried_creeper:sign` painting variant (not tagged `placeable`), and five give loot tables, all per D1 and D3. Verify: `task lint` passes, and each recipe's ingredients and counts match the spec.
 - [ ] 4.2 Assets: four item definitions (the empty bucket selects on display context, D6), their models, and `en_us.json` plus `sv_se.json` in `assets/fried_creeper/lang/`. Verify: `task lint` passes its translation checks, and every string matches the spec's names table exactly.
 - [ ] 4.3 Art scripts: drumstick, Bucket of Creeper, Empty Creeper Bucket (sprite plus 3D model texture), Hot Wings, the 64x32 sign, and a 64x64 `pack.png`. Verify: the owner reviews the previews in `dist/preview/` and approves each one.
 - [ ] 4.4 Pack README: install steps, "26.2 only", the recipes. Verify: every recipe and value in it matches the spec.

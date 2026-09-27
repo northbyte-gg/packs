@@ -1,0 +1,81 @@
+{
+  "type": "minecraft:command",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:cooked_chicken",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "minecraft:item_model": "fried_creeper:bucket_of_creeper",
+                "minecraft:item_name": {
+                  "translate": "item.fried_creeper.bucket_of_creeper",
+                  "fallback": "Bucket of Creeper"
+                },
+                "minecraft:lore": [
+                  {
+                    "translate": "item.fried_creeper.bucket_of_creeper.desc",
+                    "fallback": "Warning: food coma.",
+                    "color": "gray",
+                    "italic": false
+                  }
+                ],
+                "minecraft:food": {
+                  "nutrition": 20,
+                  "saturation": 20
+                },
+                "minecraft:consumable": {
+                  "consume_seconds": 3.2,
+                  "on_consume_effects": [
+                    {
+                      "type": "minecraft:play_sound",
+                      "sound": "minecraft:entity.creeper.primed"
+                    },
+                    {
+                      "type": "minecraft:apply_effects",
+                      "effects": [
+                        {
+                          "id": "minecraft:slowness",
+                          "duration": 300,
+                          "amplifier": 0
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "minecraft:use_remainder": {
+                  "id": "minecraft:paper",
+                  "components": {
+                    "minecraft:item_model": "fried_creeper:empty_creeper_bucket",
+                    "minecraft:item_name": {
+                      "translate": "item.fried_creeper.empty_creeper_bucket",
+                      "fallback": "Empty Creeper Bucket"
+                    },
+                    "minecraft:lore": [
+                      {
+                        "translate": "item.fried_creeper.empty_creeper_bucket.desc",
+                        "fallback": "Wear it with pride.",
+                        "color": "gray",
+                        "italic": false
+                      }
+                    ],
+                    "minecraft:equippable": {
+                      "slot": "head",
+                      "swappable": true
+                    },
+                    "minecraft:max_stack_size": 1
+                  }
+                },
+                "minecraft:max_stack_size": 16
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

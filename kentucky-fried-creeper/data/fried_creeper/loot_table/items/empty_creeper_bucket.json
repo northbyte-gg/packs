@@ -1,0 +1,39 @@
+{
+  "type": "minecraft:command",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:paper",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "minecraft:item_model": "fried_creeper:empty_creeper_bucket",
+                "minecraft:item_name": {
+                  "translate": "item.fried_creeper.empty_creeper_bucket",
+                  "fallback": "Empty Creeper Bucket"
+                },
+                "minecraft:lore": [
+                  {
+                    "translate": "item.fried_creeper.empty_creeper_bucket.desc",
+                    "fallback": "Wear it with pride.",
+                    "color": "gray",
+                    "italic": false
+                  }
+                ],
+                "minecraft:equippable": {
+                  "slot": "head",
+                  "swappable": true
+                },
+                "minecraft:max_stack_size": 1
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

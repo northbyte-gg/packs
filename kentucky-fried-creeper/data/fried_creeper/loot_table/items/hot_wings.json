@@ -1,0 +1,52 @@
+{
+  "type": "minecraft:command",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:cooked_chicken",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "minecraft:item_model": "fried_creeper:hot_wings",
+                "minecraft:item_name": {
+                  "translate": "item.fried_creeper.hot_wings",
+                  "fallback": "Hot Wings"
+                },
+                "minecraft:lore": [
+                  {
+                    "translate": "item.fried_creeper.hot_wings.desc",
+                    "fallback": "Mouth already on fire.",
+                    "color": "gray",
+                    "italic": false
+                  }
+                ],
+                "minecraft:food": {
+                  "nutrition": 5,
+                  "saturation": 6
+                },
+                "minecraft:consumable": {
+                  "consume_seconds": 0.8,
+                  "on_consume_effects": [
+                    {
+                      "type": "minecraft:apply_effects",
+                      "effects": [
+                        {
+                          "id": "minecraft:fire_resistance",
+                          "duration": 200
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

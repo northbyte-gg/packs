@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "fried_creeper:item/bucket_of_creeper"
+  }
+}

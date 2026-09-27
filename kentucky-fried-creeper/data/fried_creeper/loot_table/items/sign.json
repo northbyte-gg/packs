@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:command",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:painting",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "minecraft:painting/variant": "fried_creeper:sign"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

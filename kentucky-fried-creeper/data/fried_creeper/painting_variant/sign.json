@@ -1,0 +1,15 @@
+{
+  "asset_id": "fried_creeper:sign",
+  "width": 4,
+  "height": 2,
+  "title": {
+    "translate": "painting.fried_creeper.sign.title",
+    "fallback": "Kentucky Fried Creeper",
+    "color": "yellow"
+  },
+  "author": {
+    "translate": "painting.fried_creeper.sign.author",
+    "fallback": "NorthByte",
+    "color": "gray"
+  }
+}
