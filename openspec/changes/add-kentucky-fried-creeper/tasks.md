@@ -35,7 +35,16 @@
   - 2026-09-27: lint clean; two builds of 1.0.0 both SHA-256 f063d2f82b066d23c80329f6cf474f9994c03f596abb4d515ef629e48fff2c7a; zip holds only pack.mcmeta, pack.png, data/, assets/.
 - [x] 5.2 Headless: boot the local 26.2 server with the built zip, `/loot spawn` each of the five give tables, and read each item entity's components. Verify: the log has no pack errors, and each item's components equal D3.
   - 2026-09-27: local 26.2 server restarted with that exact zip (same SHA-256): no pack errors since start, 4 pack recipes loaded; all five give tables spawned items whose components equal D3 (amplifier 0 and swappable true omitted as defaults). A `/reload` that adds the pack fails on the sign, because painting variants load only at startup; the pack README says to restart.
-- [ ] 5.3 Owner, on a 26.2 client, walks every scenario in `specs/kentucky-fried-creeper/spec.md` against the built zip: all four recipes, eating each food, wearing the bucket, hanging the sign, at least five ordinary 4x2 paintings, recipe-book unlock, a `sv_se` client, and a client without the resource pack. Verify: each scenario is marked seen or failed, with what was seen written under this task.
+- [x] 5.3 Owner, on a 26.2 client, walks every scenario in `specs/kentucky-fried-creeper/spec.md` against the built zip: all four recipes, eating each food, wearing the bucket, hanging the sign, at least five ordinary 4x2 paintings, recipe-book unlock, a `sv_se` client, and a client without the resource pack. Verify: each scenario is marked seen or failed, with what was seen written under this task.
+  - Walked 2026-09-27 by the owner on a 26.2 client against the 1.0.0 build (same SHA-256 as 5.1), on the local server:
+    - Seen: recipe book shows the drumstick, bucket and wings recipes after picking up cooked chicken, and the sign after a painting.
+    - Seen: all four recipes craft; wings give 2; Hot Wings accepted as cooked chicken in the drumstick recipe.
+    - Seen: sprinting continues at full speed while eating a drumstick; Hot Wings stop the sprint.
+    - Seen: Bucket of Creeper plays the creeper hiss, gives Slowness I and leaves an Empty Creeper Bucket; nothing explodes. The owner saw the inventory screen open right after eating; the player inventory screen is client-side and cannot be opened by a server or datapack, so this is attributed to the owner's client, not the pack.
+    - Seen: Empty Creeper Bucket is not edible; using it goes on the head or swaps with the worn helmet.
+    - Seen: the crafted sign hangs on a 4x2 wall; five or more plain paintings on 4x2 walls were never the sign.
+    - Seen: without the resource pack, names read in English and items show the missing texture.
+    - Not checked, skipped by the owner: the `sv_se` client. The Swedish strings are covered only by the lint's translation check.
 
 ## 6. Release
 
