@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+"""Generate reference data for one Minecraft Java version.
+
+    tools/reference 26.2
+
+Downloads the version's server and client jars through Mojang's version manifest, checks
+each jar's SHA-1 against the manifest, runs the data generator (--reports) in an
+eclipse-temurin container, and extracts what the lint reads. Everything lands in
+~/.cache/northbyte-packs/<version>/, outside every git tree: the jars are Mojang's and are
+never committed. A second run reuses whatever is already there.
+
+Cache layout:
+    server.jar, client.jar      the jars, SHA-1 checked
+    version.json                from the server jar: pack_version, java_version
+    reports/                    data generator --reports output (registries.json, components/)
+    data/minecraft/             vanilla data from the embedded server jar
+    assets/minecraft/           vanilla assets from the client jar (items, models, lang, atlases)
+"""
+
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import urllib.request
+import zipfile
+from pathlib import Path
+
+MANIFEST = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
+CACHE = Path(os.environ.get("NORTHBYTE_PACKS_CACHE", Path.home() / ".cache/northbyte-packs"))
+
+
+def log(msg):
+    print(f"reference: {msg}", file=sys.stderr)
+
+
+def fetch_json(url):
+    with urllib.request.urlopen(url) as r:
+        return json.load(r)
+
+
+def sha1(path):
+    h = hashlib.sha1()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def download(url, want_sha1, dest):
+    if dest.exists() and sha1(dest) == want_sha1:
+        log(f"{dest.name}: cached, SHA-1 ok")
+        return
+    log(f"{dest.name}: downloading")
+    tmp = dest.with_suffix(".part")
+    with urllib.request.urlopen(url) as r, open(tmp, "wb") as f:
+        shutil.copyfileobj(r, f)
+    got = sha1(tmp)
+    if got != want_sha1:
+        tmp.unlink()
+        sys.exit(f"reference: {dest.name}: SHA-1 {got} != manifest {want_sha1}")
+    tmp.rename(dest)
+    log(f"{dest.name}: SHA-1 ok")
+
+
+def extract(jar, prefix, dest_root):
+    """Extract every entry under prefix from jar (a path or an open ZipFile) into dest_root."""
+    zf = jar if isinstance(jar, zipfile.ZipFile) else zipfile.ZipFile(jar)
+    n = 0
+    for name in zf.namelist():
+        if name.startswith(prefix) and not name.endswith("/"):
+            out = dest_root / name
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_bytes(zf.read(name))
+            n += 1
+    return n
+
+
+def inner_server_jar(server_jar):
+    """The server jar is a bundler; the game classes and data sit in an embedded jar."""
+    with zipfile.ZipFile(server_jar) as zf:
+        listing = zf.read("META-INF/versions.list").decode().split()
+    # versions.list: <sha256>\t<id>\t<path>
+    return "META-INF/versions/" + listing[2]
+
+
+def main():
+    if len(sys.argv) != 2:
+        sys.exit("usage: tools/reference <version>")
+    version = sys.argv[1]
+    out = CACHE / version
+    out.mkdir(parents=True, exist_ok=True)
+
+    manifest = fetch_json(MANIFEST)
+    entry = next((v for v in manifest["versions"] if v["id"] == version), None)
+    if entry is None:
+        sys.exit(f"reference: version {version} is not in Mojang's manifest")
+    meta = fetch_json(entry["url"])
+    java = meta["javaVersion"]["majorVersion"]
+
+    for side in ("server", "client"):
+        d = meta["downloads"][side]
+        download(d["url"], d["sha1"], out / f"{side}.jar")
+
+    if not (out / "version.json").exists():
+        with zipfile.ZipFile(out / "server.jar") as zf:
+            (out / "version.json").write_bytes(zf.read("version.json"))
+        log("version.json: extracted")
+
+    if not (out / "data/minecraft").exists():
+        with zipfile.ZipFile(out / "server.jar") as outer:
+            with zipfile.ZipFile(outer.open(inner_server_jar(out / "server.jar"))) as inner:
+                n = extract(inner, "data/minecraft/", out)
+        log(f"data/minecraft: extracted {n} files")
+
+    if not (out / "assets/minecraft").exists():
+        n = 0
+        for sub in ("items/", "models/", "lang/", "atlases/", "equipment/", "textures/painting/"):
+            n += extract(out / "client.jar", "assets/minecraft/" + sub, out)
+        log(f"assets/minecraft: extracted {n} files")
+
+    if not (out / "reports/registries.json").exists():
+        log(f"reports: running the data generator in eclipse-temurin:{java}-jdk")
+        with tempfile.TemporaryDirectory(dir=out) as work:
+            shutil.copy(out / "server.jar", Path(work) / "server.jar")
+            subprocess.run(
+                ["podman", "run", "--rm", "-v", f"{work}:/work:Z", "-w", "/work",
+                 f"docker.io/library/eclipse-temurin:{java}-jdk",
+                 "java", "-DbundlerMainClass=net.minecraft.data.Main", "-jar", "server.jar",
+                 "--reports", "--output", "/work/generated"],
+                check=True,
+            )
+            shutil.rmtree(out / "reports", ignore_errors=True)
+            shutil.move(Path(work) / "generated/reports", out / "reports")
+    else:
+        log("reports: cached")
+
+    pv = json.loads((out / "version.json").read_text())["pack_version"]
+    print(f"{version}: resource {pv['resource_major']}.{pv['resource_minor']}, "
+          f"data {pv['data_major']}.{pv['data_minor']} -> {out}")
+
+
+if __name__ == "__main__":
+    main()

@@ -6,17 +6,19 @@ context: |
   ## What this repo is
 
   NorthByte's own Minecraft content: datapacks and resource packs made here, not forked from
-  anyone. Each pack lives in its own top-level directory and is published as its own Modrinth
-  project under the NorthByte organization. The servers consume a pack by pinning a Modrinth
-  version id; that pin lives in a separate private repo, and nothing here deploys anything.
+  anyone. Each pack lives in its own top-level directory and is released as GitHub releases on
+  `northbyte-gg/packs`; Modrinth publishing comes later, in its own change (2026-09-27). The
+  servers install a release asset by URL; that pin lives in a separate private repo, and nothing
+  here deploys anything.
 
-  First pack: `kentucky-fried-creeper/`, a fried-chicken parody (created 2026-09-27).
+  First pack: `kentucky-fried-creeper/`, a fried-chicken parody, namespace `fried_creeper`
+  (created 2026-09-27).
 
   ## Core Principles
 
   ### I. This Repo Is Public
   Every surface is public: files, commit messages, branch names, tags, issues, PRs, and the
-  Modrinth pages built from them.
+  release pages built from them (and the Modrinth pages, once publishing there comes later).
   - Never write a hostname, cluster or load-balancer address, Kubernetes namespace, credential,
     token, or player identity (name, UUID, IP) anywhere here.
   - A leak removed from `HEAD` is still in pushed history and in any published zip.
@@ -28,9 +30,10 @@ context: |
   A pack is a single dual-use zip: `data/` makes it a datapack, `assets/` makes it a resource
   pack, one `pack.mcmeta` covers both. The server installs the same file as a datapack and
   merges it into the resource pack it pushes to players.
-  - The datapack must stay playable without the resource pack: every custom item has a
-    readable name, so a player who declined the pack sees a named vanilla texture, not
-    nonsense.
+  - The datapack must stay playable without the resource pack: every item, recipe and effect
+    works. A player who declined the resource pack keeps readable names (every name is a
+    translation key with an English fallback) but sees the missing-texture pattern, because
+    items point at the pack's own namespaced models rather than overriding vanilla ones.
 
   ### III. The Target Version Is Pinned and Read, Never Guessed
   Target: Minecraft Java 26.2 (the network's version, 2026-09-27).
@@ -46,7 +49,8 @@ context: |
     world.
   - A balance change (food values, effects) reaches only newly crafted items. Say so in the
     release notes.
-  - Published Modrinth versions are immutable. A fix is a new version.
+  - Published GitHub releases are immutable: never delete, replace or `--clobber` an asset. A fix
+    is a new version.
 
   ### V. Every Texture Has Exactly One Source
   Textures are drawn as code: a script under `<pack>/art/` renders a PNG into `assets/`.
@@ -68,7 +72,7 @@ context: |
   ## Conventions
 
   - Conventional Commits, scoped by pack (`feat(kentucky-fried-creeper): ...`) or `(tools)`.
-  - Release tags are `<pack>/v<semver>`, one Modrinth version per tag.
+  - Release tags are `<pack>/v<semver>`, one GitHub release per tag.
   - Commit attribution is `Co-Authored-By: Claude <noreply@anthropic.com>` or nothing.
 
 rules:

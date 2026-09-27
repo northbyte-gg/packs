@@ -1,4 +1,4 @@
-# Build output: zips are built by tools/ and uploaded to Modrinth, never committed
+# Build output: zips and previews are built by tools/ and attached to GitHub releases, never committed
 /dist/
 *.zip
 

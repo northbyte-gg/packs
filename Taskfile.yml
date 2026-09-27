@@ -1,0 +1,41 @@
+version: '3'
+
+# Pack tooling (design D8 of add-kentucky-fried-creeper). Every task is plain Python in tools/.
+# PACK is a top-level pack directory, e.g. PACK=kentucky-fried-creeper.
+
+tasks:
+  default:
+    desc: List tasks
+    cmds:
+      - task --list
+    silent: true
+
+  reference:
+    desc: "Fetch VERSION's jars (SHA-1 checked) and generate reference data into ~/.cache/northbyte-packs/<VERSION>/"
+    requires: {vars: [VERSION]}
+    cmds:
+      - tools/reference {{.VERSION}}
+
+  render:
+    desc: "Render every PACK/art/*.py into the pack's assets, with 16x previews in dist/preview/"
+    requires: {vars: [PACK]}
+    cmds:
+      - 'echo "render: not implemented" >&2; exit 1'
+
+  lint:
+    desc: "Check PACK against the pack-build spec; fails naming each problem"
+    requires: {vars: [PACK]}
+    cmds:
+      - 'echo "lint: not implemented" >&2; exit 1'
+
+  build:
+    desc: "Build dist/<PACK>-<VERSION>.zip reproducibly; refuses when the lint fails"
+    requires: {vars: [PACK, VERSION]}
+    cmds:
+      - 'echo "build: not implemented" >&2; exit 1'
+
+  release:
+    desc: "Tag <PACK>/v<VERSION> and create the GitHub release (DRY_RUN=true prints the gh command)"
+    requires: {vars: [PACK, VERSION]}
+    cmds:
+      - 'echo "release: not implemented" >&2; exit 1'

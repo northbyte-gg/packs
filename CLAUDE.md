@@ -6,9 +6,14 @@ player identities, ever. A leak removed from `HEAD` is still in pushed history.
 
 ## What this is
 
-NorthByte's own datapacks and resource packs, one dual-use zip per pack, published to Modrinth.
-Target: Minecraft Java 26.2. Deployment (the Modrinth version pin) lives in the private
-`../deployments/` repo, never here.
+NorthByte's own datapacks and resource packs, one dual-use zip per pack. Target: Minecraft Java
+26.2. Releases go to GitHub releases on `northbyte-gg/packs` first; Modrinth publishing comes later,
+in its own change. The servers install a release asset by URL from the private `../deployments/`
+repo; nothing here deploys anything.
+
+| Pack | Namespace |
+| --- | --- |
+| `kentucky-fried-creeper/` | `fried_creeper` |
 
 Read `openspec/config.yaml` on entry: it is the constitution.
 
@@ -20,6 +25,10 @@ Read `openspec/config.yaml` on entry: it is the constitution.
   changelog and cite it.
 - **A released namespaced id is permanent.** Renaming a painting variant deletes every placed
   copy.
+- **A published release is immutable.** Never delete, replace or `--clobber` a release asset; a fix
+  is a new version.
+- **Without the resource pack, items keep their names but show missing textures.** Every item
+  name is a translation key with an English fallback, so the datapack stays readable alone.
 - **One source per texture:** a script in `<pack>/art/` or a hand-edited PNG, never both.
 - **Parody only.** No real brand name, logo, mascot likeness or slogan.
 - **Player text keeps å/ä/ö and has no em dashes.**

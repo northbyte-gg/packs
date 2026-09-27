@@ -3,14 +3,15 @@
 NorthByte's own Minecraft datapacks and resource packs, for Minecraft Java 26.2.
 
 Each pack is one dual-use zip: install it as a datapack and it adds recipes, items and
-paintings; load it as a resource pack and those items get their textures. Every pack is
-published as its own project on Modrinth under the NorthByte organization.
+paintings; load it as a resource pack and those items get their textures. Releases go to
+GitHub releases on `northbyte-gg/packs`, one tag `<pack>/v<version>` per release. Modrinth
+publishing comes later.
 
 ## Packs
 
-| Pack | Status |
-| --- | --- |
-| `kentucky-fried-creeper/` | Planned (2026-09-27). Fried-chicken parody: food items and a sign. |
+| Pack | Namespace | Status |
+| --- | --- | --- |
+| `kentucky-fried-creeper/` | `fried_creeper` | In progress (2026-09-27). Fried-chicken parody: food items and a sign. |
 
 ## Layout
 
