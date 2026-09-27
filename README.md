@@ -32,4 +32,5 @@ openspec/         planned changes and specs
 
 ## Licence
 
-Not chosen yet. Nothing is published until it is.
+[CC0 1.0](LICENSE) (2026-09-27): code, textures and every other file are dedicated to the public
+domain. No rights reserved, no attribution required.

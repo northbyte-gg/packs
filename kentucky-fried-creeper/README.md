@@ -69,3 +69,7 @@ For operators and testing:
 
 Textures are drawn by the scripts in `art/`; `task render PACK=kentucky-fried-creeper` rewrites
 them. `task build PACK=kentucky-fried-creeper VERSION=<v>` builds the zip.
+
+## Licence
+
+[CC0 1.0](../LICENSE): public domain, no attribution required.
