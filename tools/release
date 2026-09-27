@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+"""Release a pack version on GitHub: tag <pack>/v<version>, attach the zip and its SHA-256.
+
+    tools/release kentucky-fried-creeper 1.0.0 [--notes-file notes.md]
+    DRY_RUN=true tools/release kentucky-fried-creeper 1.0.0
+
+Refuses when the working tree is dirty, the tag already exists (locally or on GitHub), HEAD is
+not pushed, or the lint fails. Publishes nowhere but GitHub, and never replaces an asset: a
+published release is immutable, and a fix is a new version.
+"""
+
+import argparse
+import hashlib
+import os
+import shlex
+import subprocess
+import sys
+from pathlib import Path
+
+TOOLS = Path(__file__).resolve().parent
+sys.path.insert(0, str(TOOLS))
+from packlib import REPO  # noqa: E402
+
+
+def git(*args):
+    return subprocess.run(["git", *args], capture_output=True, text=True).stdout.strip()
+
+
+def refuse(msg):
+    sys.exit(f"release: refused, {msg}")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("pack")
+    ap.add_argument("version")
+    ap.add_argument("--notes-file", help="Markdown placed above the SHA-256 in the release notes")
+    args = ap.parse_args()
+    dry = os.environ.get("DRY_RUN", "").lower() in ("1", "true", "yes")
+    pack = Path(args.pack)
+    tag = f"{pack.name}/v{args.version}"
+
+    if git("status", "--porcelain"):
+        refuse("the working tree is dirty")
+    if git("tag", "--list", tag) or git("ls-remote", "--tags", "origin", f"refs/tags/{tag}"):
+        refuse(f"tag {tag} already exists")
+    head = git("rev-parse", "HEAD")
+    if not git("branch", "-r", "--contains", head):
+        if not dry:
+            refuse(f"HEAD {head[:12]} is not on origin; push it first")
+        print(f"DRY_RUN: HEAD {head[:12]} is not on origin; a real release would refuse", file=sys.stderr)
+
+    build = subprocess.run([str(TOOLS / "build"), str(pack), args.version], capture_output=True, text=True)
+    sys.stderr.write(build.stderr)
+    if build.returncode:
+        sys.stdout.write(build.stdout)
+        refuse("the build failed (see the lint output above)")
+    asset = Path("dist") / f"{pack.name}-{args.version}.zip"
+    digest = hashlib.sha256(asset.read_bytes()).hexdigest()
+
+    notes = Path(args.notes_file).read_text() + "\n\n" if args.notes_file else ""
+    notes += (f"Minecraft Java 26.2 only. Install the one zip as a datapack and as a resource pack.\n\n"
+              f"SHA-256 of `{asset.name}`:\n\n```\n{digest}\n```\n")
+    cmd = ["gh", "release", "create", tag, str(asset), "--repo", REPO, "--target", head,
+           "--title", f"{pack.name} {args.version}", "--notes", notes]
+
+    print(f"tag:     {tag}")
+    print(f"asset:   {asset.name}")
+    print(f"sha256:  {digest}")
+    if dry:
+        print("DRY_RUN: " + shlex.join(cmd))
+        return
+    subprocess.run(cmd, check=True)
+    subprocess.run(["git", "fetch", "--tags", "origin"], check=True)
+
+
+if __name__ == "__main__":
+    main()

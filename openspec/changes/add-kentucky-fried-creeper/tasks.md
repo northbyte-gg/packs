@@ -6,7 +6,7 @@
 
 ## 2. Spike: the three unseen mechanics, before any art
 
-- [ ] 2.1 Build a throwaway spike zip (scratchpad, not committed) with D5's `pack.mcmeta`, a Creeper Drumstick and an Empty Creeper Bucket (D3 components, placeholder textures), and boot a local vanilla 26.2 server in a container with it in `world/datapacks/`. Verify: the server log shows no pack or parse errors, and `/datapack list enabled` lists it.
+- [x] 2.1 Build a throwaway spike zip (scratchpad, not committed) with D5's `pack.mcmeta`, a Creeper Drumstick and an Empty Creeper Bucket (D3 components, placeholder textures), and boot a local vanilla 26.2 server in a container with it in `world/datapacks/`. Verify: the server log shows no pack or parse errors, and `/datapack list enabled` lists it.
 - [ ] 2.2 Owner, on a 26.2 client connected to the spike server: sprint and eat the spike drumstick. Verify: sprinting continues at full speed until it is eaten. If not, stop and take the drumstick requirement back to the owner.
 - [ ] 2.3 Owner, same session: put the spike Empty Creeper Bucket on from the hotbar and look in third person. Verify: the item model shows on the head. If not, switch D6 to an equipment asset and record it in design.md.
 - [ ] 2.4 Owner: select the spike zip as a resource pack on the 26.2 client. Verify: the pack list shows it as compatible, with no red warning.

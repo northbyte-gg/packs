@@ -1,0 +1,7 @@
+{
+  "asset_id": "fixture:board",
+  "width": 2,
+  "height": 1,
+  "title": { "translate": "painting.fixture.board.title", "fallback": "Board", "color": "yellow" },
+  "author": { "translate": "painting.fixture.board.author", "fallback": "Fixture", "color": "gray" }
+}

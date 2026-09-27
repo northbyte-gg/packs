@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+"""Render every <pack>/art/*.py into its PNG in the pack, plus a preview.
+
+    tools/render kentucky-fried-creeper
+
+A PNG is rewritten only when its pixels change, so re-rendering leaves git status clean.
+Previews are 16x nearest-neighbour copies in dist/preview/<pack>/, outside the pack and never
+zipped.
+"""
+
+import sys
+from pathlib import Path
+
+from PIL import Image
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pixelart import art_scripts, load_script, png_bytes, same_pixels  # noqa: E402
+
+SCALE = 16
+
+
+def main():
+    if len(sys.argv) != 2:
+        sys.exit("usage: tools/render <pack>")
+    pack = Path(sys.argv[1])
+    scripts = art_scripts(pack)
+    if not scripts:
+        sys.exit(f"render: no scripts in {pack}/art/")
+    preview_dir = Path("dist/preview") / pack.name
+    preview_dir.mkdir(parents=True, exist_ok=True)
+    changed = 0
+    for script in scripts:
+        output, img = load_script(script)
+        target = pack / output
+        if target.exists() and same_pixels(Image.open(target), img):
+            status = "unchanged"
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(png_bytes(img))
+            status = "written"
+            changed += 1
+        preview = img.resize((img.width * SCALE, img.height * SCALE), Image.Resampling.NEAREST)
+        preview.save(preview_dir / f"{script.stem}.png")
+        print(f"{script.relative_to(pack)} -> {output} ({img.width}x{img.height}, {status})")
+    print(f"render: {len(scripts)} textures, {changed} written, previews in {preview_dir}/")
+
+
+if __name__ == "__main__":
+    main()

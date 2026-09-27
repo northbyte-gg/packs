@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+"""Build dist/<pack>-<version>.zip reproducibly. Refuses when the lint fails.
+
+    tools/build kentucky-fried-creeper 1.0.0
+
+The zip holds only pack.mcmeta, pack.png, data/ and assets/: sorted entries, a fixed
+1980-01-01 timestamp and fixed permissions, so one commit always gives one SHA-256.
+"""
+
+import hashlib
+import subprocess
+import sys
+from pathlib import Path
+
+TOOLS = Path(__file__).resolve().parent
+sys.path.insert(0, str(TOOLS))
+from packlib import write_zip  # noqa: E402
+
+
+def main():
+    if len(sys.argv) not in (3, 4):
+        sys.exit("usage: tools/build <pack> <version> [--previous <zip>|none]")
+    pack, version = Path(sys.argv[1]), sys.argv[2]
+    lint_args = sys.argv[3:]
+    if subprocess.run([str(TOOLS / "lint"), str(pack), *(["--previous", lint_args[0]] if lint_args else [])]).returncode:
+        sys.exit("build: refused, the lint failed")
+    dest = Path("dist") / f"{pack.name}-{version}.zip"
+    dest.parent.mkdir(exist_ok=True)
+    write_zip(pack, dest)
+    digest = hashlib.sha256(dest.read_bytes()).hexdigest()
+    print(f"{digest}  {dest}")
+
+
+if __name__ == "__main__":
+    main()

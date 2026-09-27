@@ -1,0 +1,375 @@
+#!/usr/bin/env python3
+"""Check a pack against the pack-build spec. Fails naming each problem.
+
+    tools/lint kentucky-fried-creeper [--previous <zip>]
+
+Every problem prints as `lint: <check>: <detail>`; a clean pack prints one summary line.
+The checks, by name:
+
+    json            a JSON file does not parse
+    pack-format     pack.mcmeta declares formats other than the pinned target's
+    unknown-id      an item, item tag, component, sound, effect or painting id the target lacks
+    multiplies      a recipe outputs more items than it consumes of the output's base item
+    item-mismatch   two definitions of one pack item carry different components
+    translation     a pack translation key lacks en_us or sv_se, or a translatable has no fallback
+    em-dash         player-facing text contains an em dash
+    random-painting the pack adds a painting to the random-painting pool
+    texture-drift   a texture that has a script differs from what the script renders
+    removed-id      an id from the previous release is missing
+
+"Previous release" is the zip on the newest <pack>/v* GitHub release, or --previous. With no
+release the removed-id check is skipped, and the summary line says so.
+"""
+
+import argparse
+import json
+import re
+import sys
+import tempfile
+import zipfile
+from pathlib import Path
+
+from PIL import Image
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from packlib import TARGET, Reference, ns, pack_ids, previous_release_zip  # noqa: E402
+from pixelart import art_scripts, load_script, same_pixels  # noqa: E402
+
+EM_DASH = "—"
+LANGS = ("en_us", "sv_se")
+
+
+class Lint:
+    def __init__(self, pack, ref):
+        self.pack = Path(pack)
+        self.ref = ref
+        self.problems = []
+        self.json = {}  # path relative to pack -> parsed
+
+    def fail(self, check, detail):
+        self.problems.append((check, detail))
+
+    # -- loading -----------------------------------------------------------------------------
+
+    def load(self):
+        files = [self.pack / "pack.mcmeta"] + sorted(
+            p for root in ("data", "assets") for p in (self.pack / root).rglob("*.json"))
+        for f in files:
+            rel = f.relative_to(self.pack).as_posix()
+            if not f.exists():
+                self.fail("json", f"{rel}: missing")
+                continue
+            try:
+                self.json[rel] = json.loads(f.read_text(encoding="utf-8"))
+            except (ValueError, UnicodeDecodeError) as e:
+                self.fail("json", f"{rel}: {e}")
+
+    def files(self, pattern):
+        """Parsed JSON whose path matches a glob pattern relative to the pack."""
+        rx = re.compile(pattern.replace(".", r"\.").replace("**/", "(?:.+/)?").replace("*", "[^/]*") + "$")
+        return [(rel, doc) for rel, doc in self.json.items() if rx.match(rel)]
+
+    # -- pack.mcmeta -------------------------------------------------------------------------
+
+    def check_pack_format(self):
+        meta = self.json.get("pack.mcmeta")
+        if meta is None:
+            return
+        pack = meta.get("pack", {})
+        want_min = min(self.ref.resource_format, self.ref.data_format)
+        want_max = max(self.ref.resource_format, self.ref.data_format)
+
+        def fmt(v):
+            if isinstance(v, int):
+                return (v, 0)
+            if isinstance(v, list) and len(v) in (1, 2) and all(isinstance(x, int) for x in v):
+                return (v[0], v[1] if len(v) == 2 else 0)
+            return None
+
+        got_min, got_max = fmt(pack.get("min_format")), fmt(pack.get("max_format"))
+        if (got_min, got_max) != (want_min, want_max):
+            self.fail("pack-format",
+                      f"pack.mcmeta declares {pack.get('min_format')!r}..{pack.get('max_format')!r}; "
+                      f"{self.ref.version} needs min_format {want_min[0]} (resource {want_min[0]}.{want_min[1]}) "
+                      f"and max_format [{want_max[0]}, {want_max[1]}] (data {want_max[0]}.{want_max[1]})")
+        for legacy in ("pack_format", "supported_formats"):
+            if legacy in pack:
+                self.fail("pack-format", f"pack.mcmeta has legacy {legacy!r}; {self.ref.version} does not read it")
+
+    # -- item stacks -------------------------------------------------------------------------
+
+    def stacks(self):
+        """Every item stack the pack defines, as (where, id, count, components)."""
+        out = []
+
+        def with_remainders(where, item, count, comps):
+            out.append((where, ns(item), count, comps))
+            rem = comps.get("minecraft:use_remainder") or comps.get("use_remainder")
+            if isinstance(rem, dict) and "id" in rem:
+                with_remainders(f"{where} use_remainder", rem["id"], rem.get("count", 1), rem.get("components", {}))
+
+        for rel, doc in self.files("data/*/recipe/**/*.json"):
+            res = doc.get("result")
+            if isinstance(res, dict) and "id" in res:
+                with_remainders(f"{rel} result", res["id"], res.get("count", 1), res.get("components", {}))
+        for rel, doc in self.files("data/*/loot_table/**/*.json"):
+            for pool in doc.get("pools", []):
+                for entry in pool.get("entries", []):
+                    if entry.get("type") != "minecraft:item":
+                        continue
+                    comps = {}
+                    for fn in entry.get("functions", []):
+                        if fn.get("function") == "minecraft:set_components":
+                            comps.update(fn.get("components", {}))
+                    with_remainders(f"{rel} entry", entry["name"], 1, comps)
+        return out
+
+    @staticmethod
+    def model_of(comps):
+        return comps.get("minecraft:item_model") or comps.get("item_model")
+
+    # -- ids ---------------------------------------------------------------------------------
+
+    def pack_namespaces(self):
+        return {p.name for p in (self.pack / "data").glob("*") if p.is_dir()} | \
+               {p.name for p in (self.pack / "assets").glob("*") if p.is_dir()}
+
+    def ingredient_items(self, ing):
+        """Item ids an ingredient accepts; tags expand through vanilla tag files."""
+        if isinstance(ing, list):
+            return set().union(*(self.ingredient_items(i) for i in ing)) if ing else set()
+        if isinstance(ing, str) and ing.startswith("#"):
+            return self.tag_items(ns(ing[1:]), set())
+        if isinstance(ing, str):
+            return {ns(ing)}
+        return set()
+
+    def tag_items(self, tag, seen):
+        if tag in seen:
+            return set()
+        seen.add(tag)
+        namespace, path = tag.split(":", 1)
+        f = (self.ref.root / "data" / namespace / "tags/item" / f"{path}.json")
+        if not f.exists():
+            f = self.pack / "data" / namespace / "tags/item" / f"{path}.json"
+        if not f.exists():
+            return set()
+        items = set()
+        for v in json.loads(f.read_text()).get("values", []):
+            v = v["id"] if isinstance(v, dict) else v
+            items |= self.tag_items(ns(v[1:]), seen) if v.startswith("#") else {ns(v)}
+        return items
+
+    def check_item(self, where, ident):
+        if not isinstance(ident, str):
+            return
+        if ident.startswith("#"):
+            tag = ns(ident[1:])
+            namespace, path = tag.split(":", 1)
+            if tag not in self.ref.item_tags and not (self.pack / "data" / namespace / "tags/item" / f"{path}.json").exists():
+                self.fail("unknown-id", f"{where}: item tag {ident} is not in {self.ref.version}")
+        elif not self.ref.has("item", ident):
+            self.fail("unknown-id", f"{where}: item {ident} is not in {self.ref.version}")
+
+    def check_ids(self):
+        own_paintings = pack_ids(self.pack).get("painting variant", set())
+
+        def ingredients(where, ing):
+            for i in (ing if isinstance(ing, list) else [ing]):
+                self.check_item(where, i)
+
+        for rel, doc in self.files("data/*/recipe/**/*.json"):
+            for i in doc.get("ingredients", []):
+                ingredients(rel, i)
+            for i in doc.get("key", {}).values():
+                ingredients(rel, i)
+        for rel, doc in self.files("data/*/advancement/**/*.json"):
+            for crit in doc.get("criteria", {}).values():
+                for pred in crit.get("conditions", {}).get("items", []) or []:
+                    ingredients(rel, pred.get("items"))
+
+        for where, item, _count, comps in self.stacks():
+            self.check_item(where, item)
+            for key, value in comps.items():
+                if not self.ref.has("data_component_type", key.lstrip("!")):
+                    self.fail("unknown-id", f"{where}: component {key} is not in {self.ref.version}")
+                if key.lstrip("!") in ("minecraft:painting/variant", "painting/variant"):
+                    if isinstance(value, str) and ns(value) not in self.ref.paintings | own_paintings:
+                        self.fail("unknown-id", f"{where}: painting {value} is neither in {self.ref.version} nor in the pack")
+            cons = comps.get("minecraft:consumable") or comps.get("consumable") or {}
+            sounds = [cons.get("sound")] if "sound" in cons else []
+            for eff in cons.get("on_consume_effects", []):
+                t = ns(eff.get("type", ""))
+                if not self.ref.has("consume_effect_type", t):
+                    self.fail("unknown-id", f"{where}: consume effect {t} is not in {self.ref.version}")
+                if t == "minecraft:play_sound":
+                    sounds.append(eff.get("sound"))
+                if t == "minecraft:apply_effects":
+                    for e in eff.get("effects", []):
+                        if not self.ref.has("mob_effect", e.get("id", "")):
+                            self.fail("unknown-id", f"{where}: effect {e.get('id')} is not in {self.ref.version}")
+            for s in sounds:
+                sid = s.get("sound_id") if isinstance(s, dict) else s
+                if isinstance(sid, str) and not self.ref.has("sound_event", sid):
+                    self.fail("unknown-id", f"{where}: sound {sid} is not in {self.ref.version}")
+
+    # -- recipes -----------------------------------------------------------------------------
+
+    def check_multiplies(self):
+        for rel, doc in self.files("data/*/recipe/**/*.json"):
+            res = doc.get("result")
+            if not isinstance(res, dict) or "id" not in res:
+                continue
+            out_id, out_n = ns(res["id"]), res.get("count", 1)
+            if "ingredients" in doc:
+                inputs = doc["ingredients"]
+            elif "pattern" in doc:
+                inputs = [doc["key"][c] for row in doc["pattern"] for c in row if c != " " and c in doc["key"]]
+            else:
+                continue
+            same = sum(1 for i in inputs if out_id in self.ingredient_items(i))
+            if out_n > same:
+                self.fail("multiplies", f"{rel}: makes {out_n} {out_id} from {same} {out_id} in")
+
+    def check_item_consistency(self):
+        seen = {}
+        for where, item, _count, comps in self.stacks():
+            model = self.model_of(comps)
+            if not model or ns(model).startswith("minecraft:"):
+                continue
+            key = json.dumps({"id": item, "components": comps}, sort_keys=True)
+            if model in seen and seen[model][1] != key:
+                self.fail("item-mismatch", f"{model}: {where} differs from {seen[model][0]}")
+            seen.setdefault(model, (where, key))
+
+    # -- text --------------------------------------------------------------------------------
+
+    def walk_text(self, node, found):
+        """Collect every dict with a `translate` key."""
+        if isinstance(node, dict):
+            if "translate" in node:
+                found.append(node)
+            for v in node.values():
+                self.walk_text(v, found)
+        elif isinstance(node, list):
+            for v in node:
+                self.walk_text(v, found)
+
+    def check_translations(self):
+        vanilla = set(json.loads((self.ref.root / "assets/minecraft/lang/en_us.json").read_text()))
+        langs = {lang: {} for lang in LANGS}
+        for lang in LANGS:
+            for rel, doc in self.files(f"assets/*/lang/{lang}.json"):
+                langs[lang].update(doc)
+        for rel, doc in self.json.items():
+            if not rel.startswith("data/"):
+                continue
+            found = []
+            self.walk_text(doc, found)
+            for t in found:
+                key = t["translate"]
+                if key in vanilla:
+                    continue
+                for lang in LANGS:
+                    if key not in langs[lang]:
+                        self.fail("translation", f"{rel}: {key} has no {lang} entry")
+                if not t.get("fallback"):
+                    self.fail("translation", f"{rel}: {key} has no fallback text")
+
+    def check_em_dash(self):
+        def strings(node, path):
+            if isinstance(node, str):
+                yield path, node
+            elif isinstance(node, dict):
+                for k, v in node.items():
+                    yield from strings(v, f"{path}.{k}")
+            elif isinstance(node, list):
+                for i, v in enumerate(node):
+                    yield from strings(v, f"{path}[{i}]")
+
+        for rel, doc in self.json.items():
+            for path, s in strings(doc, ""):
+                if EM_DASH in s:
+                    self.fail("em-dash", f"{rel} {path or '.'}: {s!r}")
+
+    # -- paintings ---------------------------------------------------------------------------
+
+    def check_random_painting(self):
+        for rel, doc in self.files("data/*/tags/painting_variant/**/*.json"):
+            if rel == "data/minecraft/tags/painting_variant/placeable.json" and doc.get("values"):
+                self.fail("random-painting", f"{rel} adds {doc['values']} to the random-painting pool")
+
+    # -- textures ----------------------------------------------------------------------------
+
+    def check_textures(self):
+        for script in art_scripts(self.pack):
+            srel = script.relative_to(self.pack).as_posix()
+            try:
+                output, img = load_script(script)
+            except Exception as e:  # a broken script is a problem, not a crash
+                self.fail("texture-drift", f"{srel}: does not render: {e}")
+                continue
+            png = self.pack / output
+            if not png.exists():
+                self.fail("texture-drift", f"{output}: missing; {srel} renders it (run task render)")
+            elif not same_pixels(Image.open(png), img):
+                self.fail("texture-drift", f"{output} differs from what {srel} renders: "
+                                           f"re-render, or delete the script if the PNG is hand-edited")
+
+    # -- released ids ------------------------------------------------------------------------
+
+    def check_removed(self, previous):
+        if previous is None:
+            return "no previous release, removed-id check skipped"
+        label, zpath = previous
+        with tempfile.TemporaryDirectory() as d:
+            with zipfile.ZipFile(zpath) as zf:
+                zf.extractall(d)
+            old = pack_ids(d)
+        new = pack_ids(self.pack)
+        for kind, ids in sorted(old.items()):
+            for ident in sorted(ids - new.get(kind, set())):
+                self.fail("removed-id", f"{kind} {ident} was in {label} and is missing")
+        return f"no id removed since {label}"
+
+    def run(self, previous):
+        self.load()
+        self.check_pack_format()
+        self.check_ids()
+        self.check_multiplies()
+        self.check_item_consistency()
+        self.check_translations()
+        self.check_em_dash()
+        self.check_random_painting()
+        self.check_textures()
+        return self.check_removed(previous)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("pack")
+    ap.add_argument("--previous", help="zip to treat as the previous release instead of asking GitHub, or none")
+    args = ap.parse_args()
+    pack = Path(args.pack)
+    if not (pack / "pack.mcmeta").exists():
+        sys.exit(f"lint: {pack} is not a pack (no pack.mcmeta)")
+
+    if args.previous == "none":
+        previous = None
+    elif args.previous:
+        previous = (Path(args.previous).name, Path(args.previous))
+    else:
+        previous = previous_release_zip(pack.name)
+
+    lint = Lint(pack, Reference(TARGET))
+    note = lint.run(previous)
+    for check, detail in lint.problems:
+        print(f"lint: {check}: {detail}")
+    if lint.problems:
+        print(f"lint: {pack.name}: {len(lint.problems)} problem(s)", file=sys.stderr)
+        sys.exit(1)
+    print(f"lint: {pack.name}: clean against {TARGET}, {len(lint.json)} JSON files; {note}")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": ["minecraft:cooked_chicken", "minecraft:wheat"],
+  "result": {
+    "id": "minecraft:cooked_chicken",
+    "count": 1,
+    "components": {
+      "minecraft:item_model": "fixture:snack",
+      "minecraft:item_name": { "translate": "item.fixture.snack", "fallback": "Snack" },
+      "minecraft:food": { "nutrition": 8, "saturation": 9.6 },
+      "minecraft:consumable": {
+        "on_consume_effects": [
+          { "type": "minecraft:play_sound", "sound": "minecraft:entity.creeper.primed" },
+          { "type": "minecraft:apply_effects", "effects": [{ "id": "minecraft:slowness", "duration": 300 }] }
+        ]
+      }
+    }
+  }
+}

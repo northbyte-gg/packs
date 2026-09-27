@@ -20,22 +20,29 @@ tasks:
     desc: "Render every PACK/art/*.py into the pack's assets, with 16x previews in dist/preview/"
     requires: {vars: [PACK]}
     cmds:
-      - 'echo "render: not implemented" >&2; exit 1'
+      - tools/render {{.PACK}}
 
   lint:
     desc: "Check PACK against the pack-build spec; fails naming each problem"
     requires: {vars: [PACK]}
     cmds:
-      - 'echo "lint: not implemented" >&2; exit 1'
+      - tools/lint {{.PACK}}
 
   build:
     desc: "Build dist/<PACK>-<VERSION>.zip reproducibly; refuses when the lint fails"
     requires: {vars: [PACK, VERSION]}
     cmds:
-      - 'echo "build: not implemented" >&2; exit 1'
+      - tools/build {{.PACK}} {{.VERSION}}
 
   release:
     desc: "Tag <PACK>/v<VERSION> and create the GitHub release (DRY_RUN=true prints the gh command)"
     requires: {vars: [PACK, VERSION]}
+    env:
+      DRY_RUN: '{{.DRY_RUN}}'
     cmds:
-      - 'echo "release: not implemented" >&2; exit 1'
+      - tools/release {{.PACK}} {{.VERSION}}
+
+  test-lint:
+    desc: "Run the lint against tools/fixtures/lint/: every broken fixture must fail by name, clean/ must pass"
+    cmds:
+      - tools/test-lint
